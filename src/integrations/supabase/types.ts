@@ -13,32 +13,47 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
+          current_round: number
           description: string | null
           end_date: string | null
+          entry_fee: number
           id: string
-          start_date: string | null
-          status: string
-          title: string
+          is_completed: boolean
+          is_locked: boolean
+          name: string
+          prize_pool: number
+          start_time: string | null
+          total_rounds: number
         }
         Insert: {
           created_at?: string
           created_by: string
+          current_round?: number
           description?: string | null
           end_date?: string | null
+          entry_fee?: number
           id?: string
-          start_date?: string | null
-          status: string
-          title: string
+          is_completed?: boolean
+          is_locked?: boolean
+          name: string
+          prize_pool?: number
+          start_time?: string | null
+          total_rounds?: number
         }
         Update: {
           created_at?: string
           created_by?: string
+          current_round?: number
           description?: string | null
           end_date?: string | null
+          entry_fee?: number
           id?: string
-          start_date?: string | null
-          status?: string
-          title?: string
+          is_completed?: boolean
+          is_locked?: boolean
+          name?: string
+          prize_pool?: number
+          start_time?: string | null
+          total_rounds?: number
         }
         Relationships: []
       }

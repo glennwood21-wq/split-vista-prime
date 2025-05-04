@@ -107,9 +107,12 @@ const Dashboard: React.FC = () => {
       const { error } = await supabase
         .from('games')
         .insert({
-          title: 'New Game ' + new Date().toLocaleDateString(),
+          name: 'New Game ' + new Date().toLocaleDateString(),
           created_by: user!.id,
-          status: 'open'
+          entry_fee: 0,
+          prize_pool: 100,
+          is_locked: false,
+          is_completed: false
         });
         
       if (error) throw error;
@@ -230,14 +233,14 @@ const Dashboard: React.FC = () => {
                     <TableBody>
                       {games.map((game) => (
                         <TableRow key={game.id}>
-                          <TableCell className="font-medium text-theSplit-white">{game.title}</TableCell>
+                          <TableCell className="font-medium text-theSplit-white">{game.name}</TableCell>
                           <TableCell>
-                            {game.start_date ? 
-                              formatDistanceToNow(new Date(game.start_date), { addSuffix: true }) : 
+                            {game.start_time ? 
+                              formatDistanceToNow(new Date(game.start_time), { addSuffix: true }) : 
                               'Not scheduled'}
                           </TableCell>
-                          <TableCell>{game.entry_fee ? formatPrize(game.entry_fee) : '$0.00'}</TableCell>
-                          <TableCell>{game.prize_pool ? formatPrize(game.prize_pool) : '$0.00'}</TableCell>
+                          <TableCell>{formatPrize(game.entry_fee)}</TableCell>
+                          <TableCell>{formatPrize(game.prize_pool)}</TableCell>
                           <TableCell>
                             <span className={`inline-block px-2 py-1 rounded text-xs ${
                               game.is_locked ? 'bg-yellow-500/20 text-yellow-400' : 
@@ -292,7 +295,7 @@ const Dashboard: React.FC = () => {
                           className="p-3 rounded-lg bg-theSplit-navy border border-theSplit-teal/20 hover:border-theSplit-teal/60 transition-all"
                         >
                           <div className="flex justify-between items-center">
-                            <h3 className="font-medium">{entry.games?.title}</h3>
+                            <h3 className="font-medium">{entry.games?.name}</h3>
                             <span className={`inline-block px-2 py-1 rounded text-xs ${
                               entry.status === 'active' ? 'bg-green-500/20 text-green-400' :
                               entry.status === 'eliminated' ? 'bg-red-500/20 text-red-400' :
