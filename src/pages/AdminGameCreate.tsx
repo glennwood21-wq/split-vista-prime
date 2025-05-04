@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/sonner';
 import { format } from 'date-fns';
+import QuestionForm from '@/components/QuestionForm';
 import {
   Card,
   CardContent,
@@ -17,6 +18,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 const AdminGameCreate: React.FC = () => {
   const { user } = useAuth();
@@ -24,6 +31,8 @@ const AdminGameCreate: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [currentTab, setCurrentTab] = useState('details');
+  const [createdGame, setCreatedGame] = useState<{ id: string, name: string, total_rounds: number } | null>(null);
   
   // Game form state
   const [gameName, setGameName] = useState('');
@@ -87,7 +96,15 @@ const AdminGameCreate: React.FC = () => {
       if (error) throw error;
       
       toast.success('Game created successfully!');
-      navigate('/dashboard');
+      
+      if (data && data.length > 0) {
+        setCreatedGame({
+          id: data[0].id,
+          name: data[0].name,
+          total_rounds: data[0].total_rounds
+        });
+        setCurrentTab('questions');
+      }
       
     } catch (error: any) {
       console.error('Error creating game:', error.message);
@@ -95,6 +112,10 @@ const AdminGameCreate: React.FC = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleQuestionAdded = () => {
+    // Refresh game questions or update UI
   };
   
   // If user is not logged in, redirect to sign in page
@@ -123,98 +144,154 @@ const AdminGameCreate: React.FC = () => {
           ← Back to Dashboard
         </Button>
 
-        <Card className="max-w-2xl mx-auto bg-theSplit-navy/80 border-theSplit-teal/20 text-theSplit-white">
-          <CardHeader>
-            <CardTitle className="text-2xl text-gradient">Create New Game</CardTitle>
-            <CardDescription className="text-theSplit-light/70">
-              Set up a new prediction game for users to join
-            </CardDescription>
-          </CardHeader>
-          
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="gameName">Game Name</Label>
-                <Input
-                  id="gameName"
-                  value={gameName}
-                  onChange={(e) => setGameName(e.target.value)}
-                  required
-                  className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white"
-                  placeholder="Enter game name"
-                />
-              </div>
+        <Tabs 
+          value={currentTab} 
+          onValueChange={setCurrentTab}
+          className="max-w-2xl mx-auto"
+        >
+          <TabsList className="grid w-full grid-cols-2 bg-theSplit-navy/90 border border-theSplit-teal/20">
+            <TabsTrigger 
+              value="details" 
+              disabled={createdGame !== null}
+              className="data-[state=active]:bg-theSplit-teal/20 data-[state=active]:text-theSplit-aqua"
+            >
+              Game Details
+            </TabsTrigger>
+            <TabsTrigger 
+              value="questions" 
+              disabled={createdGame === null}
+              className="data-[state=active]:bg-theSplit-teal/20 data-[state=active]:text-theSplit-aqua"
+            >
+              Questions
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details">
+            <Card className="bg-theSplit-navy/80 border-theSplit-teal/20 text-theSplit-white">
+              <CardHeader>
+                <CardTitle className="text-2xl text-gradient">Create New Game</CardTitle>
+                <CardDescription className="text-theSplit-light/70">
+                  Set up a new prediction game for users to join
+                </CardDescription>
+              </CardHeader>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="entryFee">Entry Fee ($)</Label>
-                  <Input
-                    id="entryFee"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={entryFee}
-                    onChange={(e) => setEntryFee(e.target.value)}
-                    required
-                    className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white"
-                  />
-                </div>
+              <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="gameName">Game Name</Label>
+                    <Input
+                      id="gameName"
+                      value={gameName}
+                      onChange={(e) => setGameName(e.target.value)}
+                      required
+                      className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white"
+                      placeholder="Enter game name"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="entryFee">Entry Fee ($)</Label>
+                      <Input
+                        id="entryFee"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={entryFee}
+                        onChange={(e) => setEntryFee(e.target.value)}
+                        required
+                        className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="prizePool">Prize Pool ($)</Label>
+                      <Input
+                        id="prizePool"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={prizePool}
+                        onChange={(e) => setPrizePool(e.target.value)}
+                        required
+                        className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="totalRounds">Total Rounds</Label>
+                      <Input
+                        id="totalRounds"
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={totalRounds}
+                        onChange={(e) => setTotalRounds(e.target.value)}
+                        required
+                        className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="startTime">Start Time</Label>
+                      <Input
+                        id="startTime"
+                        type="datetime-local"
+                        value={startTime || formattedNow}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        required
+                        className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="prizePool">Prize Pool ($)</Label>
-                  <Input
-                    id="prizePool"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={prizePool}
-                    onChange={(e) => setPrizePool(e.target.value)}
-                    required
-                    className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white"
-                  />
+                <CardFooter>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy"
+                    disabled={submitting}
+                  >
+                    {submitting ? 'Creating...' : 'Create Game'}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="questions">
+            {createdGame && (
+              <div className="space-y-6">
+                <Card className="bg-theSplit-navy/80 border-theSplit-teal/20 text-theSplit-white">
+                  <CardHeader>
+                    <CardTitle className="text-2xl text-gradient">Add Questions</CardTitle>
+                    <CardDescription className="text-theSplit-light/70">
+                      Add questions for "{createdGame.name}" - {createdGame.total_rounds} rounds total
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <QuestionForm 
+                      gameId={createdGame.id} 
+                      totalRounds={createdGame.total_rounds}
+                      onQuestionAdded={handleQuestionAdded}
+                    />
+                  </CardContent>
+                </Card>
+                
+                <div className="flex justify-center">
+                  <Button 
+                    onClick={() => navigate('/dashboard')} 
+                    className="bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy"
+                  >
+                    Back to Dashboard
+                  </Button>
                 </div>
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="totalRounds">Total Rounds</Label>
-                  <Input
-                    id="totalRounds"
-                    type="number"
-                    min="1"
-                    step="1"
-                    value={totalRounds}
-                    onChange={(e) => setTotalRounds(e.target.value)}
-                    required
-                    className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="startTime">Start Time</Label>
-                  <Input
-                    id="startTime"
-                    type="datetime-local"
-                    value={startTime || formattedNow}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    required
-                    className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white"
-                  />
-                </div>
-              </div>
-            </CardContent>
-            
-            <CardFooter>
-              <Button 
-                type="submit" 
-                className="w-full bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy"
-                disabled={submitting}
-              >
-                {submitting ? 'Creating...' : 'Create Game'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
