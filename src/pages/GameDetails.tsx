@@ -6,8 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/sonner';
-import { formatDistanceToNow, format } from 'date-fns';
-import { Calendar, Users, TrendingUp, Award } from 'lucide-react';
+import { formatDistanceToNow, format, isPast } from 'date-fns';
+import { Calendar, Users, TrendingUp, Award, Lock } from 'lucide-react';
 
 const GameDetails: React.FC = () => {
   const { gameId } = useParams<{ gameId: string }>();
@@ -34,6 +34,22 @@ const GameDetails: React.FC = () => {
           .single();
 
         if (error) throw error;
+        
+        // Check if start time has passed and update is_locked if needed
+        if (data.start_time && !data.is_locked && isPast(new Date(data.start_time))) {
+          // Set is_locked to true if the start time has passed
+          const { error: updateError } = await supabase
+            .from('games')
+            .update({ is_locked: true })
+            .eq('id', gameId);
+          
+          if (updateError) {
+            console.error('Error updating game locked status:', updateError.message);
+          } else {
+            data.is_locked = true;
+          }
+        }
+        
         setGame(data);
 
         // Check if user has already joined this game
@@ -94,6 +110,12 @@ const GameDetails: React.FC = () => {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
+  };
+
+  // Check if start time has passed
+  const isStartTimePassed = (startTime: string | null) => {
+    if (!startTime) return false;
+    return isPast(new Date(startTime));
   };
 
   if (loading) {
@@ -165,6 +187,11 @@ const GameDetails: React.FC = () => {
                           <span className="block text-sm text-theSplit-light/70">
                             {formatDistanceToNow(new Date(game.start_time), { addSuffix: true })}
                           </span>
+                          {isStartTimePassed(game.start_time) && (
+                            <span className="block text-xs text-red-400 mt-1">
+                              Game has already started
+                            </span>
+                          )}
                         </>
                       ) : (
                         'Not scheduled'
@@ -208,18 +235,30 @@ const GameDetails: React.FC = () => {
 
               <div className="bg-theSplit-navy/70 border border-theSplit-teal/20 rounded-lg p-6 mt-8">
                 <h2 className="text-xl font-semibold mb-4">Ready to play?</h2>
-                <p className="text-theSplit-light/80 mb-4">
-                  {game.is_locked ? 
-                    'This game is currently locked and cannot be joined at this time.' :
-                    'Join this game to compete with other players and win the prize pool!'}
-                </p>
+                
+                {game.is_locked || isStartTimePassed(game.start_time) ? (
+                  <div className="flex items-center text-red-400 mb-4">
+                    <Lock className="w-5 h-5 mr-2" />
+                    <p>
+                      {isStartTimePassed(game.start_time) ? 
+                        'This game has already started and is no longer accepting new participants.' : 
+                        'This game is currently locked and cannot be joined at this time.'}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-theSplit-light/80 mb-4">
+                    Join this game to compete with other players and win the prize pool!
+                  </p>
+                )}
                 
                 <Button 
                   onClick={handleJoinGame}
-                  disabled={hasJoined || joining || game.is_locked}
-                  className="w-full bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy"
+                  disabled={hasJoined || joining || game.is_locked || isStartTimePassed(game.start_time)}
+                  className="w-full bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy disabled:opacity-50"
                 >
-                  {hasJoined ? 'Already Joined' : joining ? 'Joining...' : 'Join Game'}
+                  {hasJoined ? 'Already Joined' : 
+                   joining ? 'Joining...' : 
+                   game.is_locked || isStartTimePassed(game.start_time) ? 'Registration Closed' : 'Join Game'}
                 </Button>
                 
                 {hasJoined && (
