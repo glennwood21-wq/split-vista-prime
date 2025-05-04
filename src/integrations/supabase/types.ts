@@ -9,26 +9,94 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      games: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          id: string
+          start_date: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          start_date?: string | null
+          status: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          start_date?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
           email: string
           id: string
+          is_admin: boolean | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           email: string
           id: string
+          is_admin?: boolean | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
+          is_admin?: boolean | null
           updated_at?: string
         }
         Relationships: []
+      }
+      user_games: {
+        Row: {
+          game_id: string
+          id: string
+          joined_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          game_id: string
+          id?: string
+          joined_at?: string
+          status: string
+          user_id: string
+        }
+        Update: {
+          game_id?: string
+          id?: string
+          joined_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_games_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
