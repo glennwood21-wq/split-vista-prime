@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatDistanceToNow } from 'date-fns';
+import { Plus } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { user, signOut, isLoading } = useAuth();
@@ -185,10 +186,10 @@ const Dashboard: React.FC = () => {
                 <h2 className="text-xl font-semibold text-gradient">Available Games</h2>
                 {isAdmin && (
                   <Button 
-                    onClick={handleCreateGame} 
+                    onClick={() => navigate('/admin/game/create')}
                     className="bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy"
                   >
-                    Create Game
+                    <Plus className="mr-1" size={16} /> Create Game
                   </Button>
                 )}
               </div>
