@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -47,17 +46,21 @@ const Dashboard: React.FC = () => {
     fetchProfile();
   }, [user]);
 
-  // Fetch all available games
+  // Fetch available games (not locked and with future start times)
   useEffect(() => {
     const fetchGames = async () => {
       if (!user) return;
       
       try {
         setLoadingGames(true);
+        const now = new Date().toISOString();
+        
         const { data, error } = await supabase
           .from('games')
           .select('*')
-          .order('created_at', { ascending: false });
+          .eq('is_locked', false)
+          .gt('start_time', now)
+          .order('start_time', { ascending: true });
           
         if (error) throw error;
         setGames(data || []);
@@ -135,6 +138,21 @@ const Dashboard: React.FC = () => {
   // Handle joining a game
   const handleJoinGame = async (gameId: string) => {
     try {
+      // Check if user is already in this game
+      const { data: existingEntry, error: checkError } = await supabase
+        .from('user_games')
+        .select('id')
+        .eq('user_id', user!.id)
+        .eq('game_id', gameId)
+        .single();
+        
+      if (checkError && checkError.code !== 'PGRST116') throw checkError;
+      
+      if (existingEntry) {
+        toast.info('You have already joined this game');
+        return;
+      }
+      
       const { error } = await supabase
         .from('user_games')
         .insert({
@@ -270,7 +288,7 @@ const Dashboard: React.FC = () => {
               ) : (
                 <div className="bg-theSplit-navy/50 border border-theSplit-teal/20 rounded-lg p-6">
                   <p className="text-theSplit-light/70 text-center">
-                    {isAdmin ? 'No games created yet. Use the Create Game button to add one.' : 'No games available yet.'}
+                    {isAdmin ? 'No upcoming games available. Use the Create Game button to add one.' : 'No upcoming games available at the moment.'}
                   </p>
                 </div>
               )}

@@ -81,6 +81,92 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          correct_answer: string | null
+          created_at: string
+          game_id: string
+          id: string
+          question_text: string
+          round_number: number
+        }
+        Insert: {
+          correct_answer?: string | null
+          created_at?: string
+          game_id: string
+          id?: string
+          question_text: string
+          round_number: number
+        }
+        Update: {
+          correct_answer?: string | null
+          created_at?: string
+          game_id?: string
+          id?: string
+          question_text?: string
+          round_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_answers: {
+        Row: {
+          created_at: string
+          eliminated: boolean
+          game_id: string
+          id: string
+          is_correct: boolean | null
+          question_id: string
+          round_number: number
+          selected_answer: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          eliminated?: boolean
+          game_id: string
+          id?: string
+          is_correct?: boolean | null
+          question_id: string
+          round_number: number
+          selected_answer: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          eliminated?: boolean
+          game_id?: string
+          id?: string
+          is_correct?: boolean | null
+          question_id?: string
+          round_number?: number
+          selected_answer?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_answers_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_games: {
         Row: {
           game_id: string
