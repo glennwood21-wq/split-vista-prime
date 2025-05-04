@@ -4,30 +4,31 @@ import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import FeatureCard from '@/components/FeatureCard';
 import Footer from '@/components/Footer';
-import { ArrowRight, CheckCircle, CreditCard, Lock, PieChart, Users } from 'lucide-react';
+import { ArrowRight, CheckCircle, Trophy, Users, Target, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const Index: React.FC = () => {
   const features = [
     {
+      icon: Target,
+      title: "Make Predictions",
+      description: "Predict winners of various sports events and competitions to advance in the tournament."
+    },
+    {
       icon: Users,
-      title: "Group Expenses",
-      description: "Easily split bills with roommates, friends, or travel companions with automatic balance calculations."
+      title: "Compete With Friends",
+      description: "Create private leagues to battle against friends and colleagues for ultimate bragging rights."
     },
     {
-      icon: CreditCard,
-      title: "Instant Settlements",
-      description: "Send and receive payments directly through the app with your preferred payment method."
+      icon: Trophy,
+      title: "Win Prizes",
+      description: "Top players earn real prizes and rewards based on their prediction accuracy and strategy."
     },
     {
-      icon: PieChart,
-      title: "Expense Analytics",
-      description: "Track your spending patterns with insightful charts and spending categorization."
-    },
-    {
-      icon: Lock,
-      title: "Secure & Private",
-      description: "Your financial data is encrypted and never shared with third parties."
+      icon: Shield,
+      title: "Secure Platform",
+      description: "Your account and information are protected with industry-standard encryption and security."
     }
   ];
 
@@ -43,10 +44,10 @@ const Index: React.FC = () => {
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Split expenses without the <span className="text-gradient">headache</span>
+                How <span className="text-gradient">The Split</span> works
               </h2>
               <p className="text-theSplit-light/80 max-w-2xl mx-auto">
-                Our intuitive tools make tracking shared expenses and settling debts easier than ever before.
+                Join thousands of players making predictions and competing for prizes.
               </p>
             </div>
             
@@ -68,10 +69,10 @@ const Index: React.FC = () => {
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                How <span className="text-gradient">The Split</span> works
+                Three steps to <span className="text-gradient">victory</span>
               </h2>
               <p className="text-theSplit-light/80 max-w-2xl mx-auto">
-                Three simple steps to make sharing expenses with friends completely stress-free.
+                Simple to play, challenging to master. Start your journey to the top.
               </p>
             </div>
             
@@ -79,18 +80,18 @@ const Index: React.FC = () => {
               {[
                 {
                   step: "01",
-                  title: "Add your expenses",
-                  description: "Enter bills and expenses as they happen. Tag who paid and who needs to share the cost."
+                  title: "Sign up & join a game",
+                  description: "Create your account, browse available tournaments, and join the competitions that interest you most."
                 },
                 {
                   step: "02",
-                  title: "The Split does the math",
-                  description: "Our app calculates who owes what to whom, simplifying even the most complex expense sharing scenarios."
+                  title: "Make your predictions",
+                  description: "For each round, predict the winners based on your knowledge and strategy before the deadline."
                 },
                 {
                   step: "03",
-                  title: "Settle up easily",
-                  description: "Send payment reminders or pay directly through the app with your preferred payment method."
+                  title: "Survive and win",
+                  description: "Advance through rounds with correct predictions and outlast other players to claim the prize."
                 }
               ].map((item, idx) => (
                 <div key={idx} className="relative">
@@ -122,29 +123,29 @@ const Index: React.FC = () => {
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Loved by friends and <span className="text-gradient">roommates</span>
+                What our <span className="text-gradient">players</span> say
               </h2>
               <p className="text-theSplit-light/80 max-w-2xl mx-auto">
-                See what our users are saying about The Split.
+                Join thousands of satisfied players on The Split.
               </p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
-                  quote: "The Split has made managing apartment expenses so much easier. No more awkward money conversations!",
+                  quote: "The Split makes watching sports so much more exciting. I've won twice and the prizes were delivered quickly!",
                   author: "Alex Johnson",
-                  role: "Apartment Renter"
+                  role: "Premier League Fan"
                 },
                 {
-                  quote: "We used this for our group trip to Europe and it saved us hours of calculating who owed what.",
+                  quote: "I love competing with my friends. The interface is clean and the predictions are easy to make.",
                   author: "Sarah Williams",
-                  role: "Travel Enthusiast"
+                  role: "NBA Enthusiast"
                 },
                 {
-                  quote: "As a financial advisor, I recommend The Split to clients who share expenses. It's simple yet powerful.",
+                  quote: "As a sports analyst, I appreciate the depth of the competition. It really tests your knowledge.",
                   author: "Michael Chen",
-                  role: "Financial Advisor"
+                  role: "Sports Analyst"
                 }
               ].map((testimonial, idx) => (
                 <div key={idx} className="glass-card rounded-xl p-6 h-full">
@@ -182,24 +183,28 @@ const Index: React.FC = () => {
               <div className="absolute -inset-1 bg-gradient-to-r from-theSplit-teal to-theSplit-aqua rounded-2xl blur-md opacity-30"></div>
               <div className="glass-card rounded-2xl p-12 text-center relative">
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                  Ready to split expenses <span className="text-gradient">smarter</span>?
+                  Ready to test your <span className="text-gradient">prediction skills</span>?
                 </h2>
                 <p className="text-theSplit-light/80 max-w-2xl mx-auto mb-8">
-                  Join thousands of friends, roommates, and couples who use The Split to manage shared expenses without the stress.
+                  Join thousands of players competing for prizes and bragging rights in prediction tournaments.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button className="bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-white h-12 px-8 button-glow">
-                    Get Started Free
-                  </Button>
-                  <Button variant="outline" className="border-theSplit-teal text-theSplit-aqua hover:bg-theSplit-teal/10 h-12 px-8">
-                    View Demo
-                  </Button>
+                  <Link to="/signup">
+                    <Button className="bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-white h-12 px-8 button-glow">
+                      Sign Up to Play
+                    </Button>
+                  </Link>
+                  <Link to="/games">
+                    <Button variant="outline" className="border-theSplit-teal text-theSplit-aqua hover:bg-theSplit-teal/10 h-12 px-8">
+                      Browse Games
+                    </Button>
+                  </Link>
                 </div>
                 
                 <div className="mt-8 flex items-center justify-center gap-3 text-theSplit-light/80">
                   <CheckCircle className="h-5 w-5 text-theSplit-aqua" />
-                  <span>No credit card required</span>
+                  <span>No credit card required to start</span>
                 </div>
               </div>
             </div>

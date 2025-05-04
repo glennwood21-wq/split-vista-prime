@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -21,10 +22,12 @@ const Header: React.FC = () => {
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
-          <a href="#features" className="text-theSplit-light hover:text-theSplit-aqua transition-colors">Features</a>
-          <a href="#how-it-works" className="text-theSplit-light hover:text-theSplit-aqua transition-colors">How It Works</a>
-          <a href="#testimonials" className="text-theSplit-light hover:text-theSplit-aqua transition-colors">Testimonials</a>
-          <Button className="bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-white">Get Started</Button>
+          <Link to="/" className="text-theSplit-light hover:text-theSplit-aqua transition-colors">Home</Link>
+          <Link to="/games" className="text-theSplit-light hover:text-theSplit-aqua transition-colors">Games</Link>
+          <Link to="/dashboard" className="text-theSplit-light hover:text-theSplit-aqua transition-colors">Dashboard</Link>
+          <Link to="/signin">
+            <Button variant="outline" className="border-theSplit-teal text-theSplit-aqua hover:bg-theSplit-teal/10">Sign In</Button>
+          </Link>
         </nav>
         
         {/* Mobile Menu Button */}
@@ -44,33 +47,34 @@ const Header: React.FC = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-theSplit-navy border-t border-theSplit-teal/20 py-4">
           <nav className="container mx-auto px-4 flex flex-col space-y-3">
-            <a 
-              href="#features" 
+            <Link 
+              to="/" 
               className="px-4 py-2 text-theSplit-light hover:bg-theSplit-teal/10 rounded-md"
               onClick={() => setIsMenuOpen(false)}
             >
-              Features
-            </a>
-            <a 
-              href="#how-it-works" 
+              Home
+            </Link>
+            <Link 
+              to="/games" 
               className="px-4 py-2 text-theSplit-light hover:bg-theSplit-teal/10 rounded-md"
               onClick={() => setIsMenuOpen(false)}
             >
-              How It Works
-            </a>
-            <a 
-              href="#testimonials" 
+              Games
+            </Link>
+            <Link 
+              to="/dashboard" 
               className="px-4 py-2 text-theSplit-light hover:bg-theSplit-teal/10 rounded-md"
               onClick={() => setIsMenuOpen(false)}
             >
-              Testimonials
-            </a>
-            <Button 
-              className="mt-2 bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-white w-full"
+              Dashboard
+            </Link>
+            <Link 
+              to="/signin" 
+              className="px-4 py-2 text-theSplit-light hover:bg-theSplit-teal/10 rounded-md"
               onClick={() => setIsMenuOpen(false)}
             >
-              Get Started
-            </Button>
+              Sign In
+            </Link>
           </nav>
         </div>
       )}
