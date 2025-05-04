@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { formatDistanceToNow } from 'date-fns';
 
 const Dashboard: React.FC = () => {
   const { user, signOut, isLoading } = useAuth();
+  const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [games, setGames] = useState<any[]>([]);
   const [loadingGames, setLoadingGames] = useState(true);
@@ -135,58 +136,17 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Handle joining a game
-  const handleJoinGame = async (gameId: string) => {
-    try {
-      // Check if user is already in this game
-      const { data: existingEntry, error: checkError } = await supabase
-        .from('user_games')
-        .select('id')
-        .eq('user_id', user!.id)
-        .eq('game_id', gameId)
-        .single();
-        
-      if (checkError && checkError.code !== 'PGRST116') throw checkError;
-      
-      if (existingEntry) {
-        toast.info('You have already joined this game');
-        return;
-      }
-      
-      const { error } = await supabase
-        .from('user_games')
-        .insert({
-          user_id: user!.id,
-          game_id: gameId,
-          status: 'active'
-        });
-        
-      if (error) throw error;
-      
-      toast.success('Successfully joined the game!');
-      // Reload active games
-      const { data: newActiveGames, error: fetchError } = await supabase
-        .from('user_games')
-        .select(`
-          *,
-          games:game_id(*)
-        `)
-        .eq('user_id', user!.id);
-        
-      if (fetchError) throw fetchError;
-      setActiveGames(newActiveGames || []);
-    } catch (error: any) {
-      console.error('Error joining game:', error.message);
-      toast.error('Failed to join game');
-    }
-  };
-
   // Format prize pool
   const formatPrize = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
+  };
+
+  // Navigate to game details page
+  const handleViewGameDetails = (gameId: string) => {
+    navigate(`/game/${gameId}`);
   };
 
   // If user is not logged in, redirect to sign in page
@@ -275,9 +235,9 @@ const Dashboard: React.FC = () => {
                               size="sm"
                               disabled={game.is_locked || game.is_completed}
                               className="border-theSplit-teal/50 text-theSplit-aqua hover:bg-theSplit-teal/10"
-                              onClick={() => handleJoinGame(game.id)}
+                              onClick={() => handleViewGameDetails(game.id)}
                             >
-                              Join
+                              View Game
                             </Button>
                           </TableCell>
                         </TableRow>
