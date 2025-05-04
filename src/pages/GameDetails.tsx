@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -154,15 +153,15 @@ const GameDetails: React.FC = () => {
     <div className="min-h-screen bg-theSplit-navy text-theSplit-white">
       <Header />
       <div className="container mx-auto pt-32 pb-20 px-4">
-        <div className="max-w-2xl mx-auto">
-          <Button 
-            onClick={() => navigate('/dashboard')} 
-            variant="outline"
-            className="mb-6 border-theSplit-teal/50 text-theSplit-aqua hover:bg-theSplit-teal/10"
-          >
-            ← Back to Dashboard
-          </Button>
+        <Button 
+          onClick={() => navigate('/dashboard')} 
+          variant="outline"
+          className="mb-6 border-theSplit-teal/50 text-theSplit-aqua hover:bg-theSplit-teal/10"
+        >
+          ← Back to Dashboard
+        </Button>
 
+        <div className="max-w-2xl mx-auto">
           <div className="glass-card rounded-xl p-8 relative">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-theSplit-teal to-theSplit-aqua rounded-xl blur-sm opacity-30 -z-10"></div>
             
@@ -254,7 +253,7 @@ const GameDetails: React.FC = () => {
                 <Button 
                   onClick={handleJoinGame}
                   disabled={hasJoined || joining || game.is_locked || isStartTimePassed(game.start_time)}
-                  className="w-full bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy disabled:opacity-50"
+                  className="w-full bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy disabled:opacity-50 mb-4"
                 >
                   {hasJoined ? 'Already Joined' : 
                    joining ? 'Joining...' : 
@@ -262,9 +261,17 @@ const GameDetails: React.FC = () => {
                 </Button>
                 
                 {hasJoined && (
-                  <p className="text-center text-green-400 text-sm mt-2">
-                    You have already joined this game
-                  </p>
+                  <>
+                    <p className="text-center text-green-400 text-sm mb-4">
+                      You have already joined this game
+                    </p>
+                    <Button 
+                      onClick={() => navigate(`/game/${gameId}/question`)}
+                      className="w-full bg-theSplit-aqua/30 hover:bg-theSplit-aqua/50 text-theSplit-white border border-theSplit-aqua/50"
+                    >
+                      Go to Current Question
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
