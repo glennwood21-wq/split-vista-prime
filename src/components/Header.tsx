@@ -3,31 +3,50 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const { user, signOut } = useAuth();
   
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-theSplit-navy/80 backdrop-blur-md border-b border-theSplit-teal/20">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-r from-theSplit-teal to-theSplit-aqua flex items-center justify-center">
-            <span className="text-theSplit-white font-bold">S</span>
-          </div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-theSplit-teal to-theSplit-aqua bg-clip-text text-transparent">
-            The Split
-          </h1>
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-theSplit-teal to-theSplit-aqua flex items-center justify-center">
+              <span className="text-theSplit-white font-bold">S</span>
+            </div>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-theSplit-teal to-theSplit-aqua bg-clip-text text-transparent">
+              The Split
+            </h1>
+          </Link>
         </div>
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
           <Link to="/" className="text-theSplit-light hover:text-theSplit-aqua transition-colors">Home</Link>
           <Link to="/games" className="text-theSplit-light hover:text-theSplit-aqua transition-colors">Games</Link>
-          <Link to="/dashboard" className="text-theSplit-light hover:text-theSplit-aqua transition-colors">Dashboard</Link>
-          <Link to="/signin">
-            <Button variant="outline" className="border-theSplit-teal text-theSplit-aqua hover:bg-theSplit-teal/10">Sign In</Button>
-          </Link>
+          
+          {user ? (
+            <>
+              <Link to="/dashboard" className="text-theSplit-light hover:text-theSplit-aqua transition-colors">Dashboard</Link>
+              <Button 
+                variant="outline" 
+                className="border-theSplit-teal text-theSplit-aqua hover:bg-theSplit-teal/10"
+                onClick={() => signOut()}
+              >
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/signin">
+                <Button variant="outline" className="border-theSplit-teal text-theSplit-aqua hover:bg-theSplit-teal/10">Sign In</Button>
+              </Link>
+            </>
+          )}
         </nav>
         
         {/* Mobile Menu Button */}
@@ -61,20 +80,45 @@ const Header: React.FC = () => {
             >
               Games
             </Link>
-            <Link 
-              to="/dashboard" 
-              className="px-4 py-2 text-theSplit-light hover:bg-theSplit-teal/10 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
-            <Link 
-              to="/signin" 
-              className="px-4 py-2 text-theSplit-light hover:bg-theSplit-teal/10 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Sign In
-            </Link>
+            
+            {user ? (
+              <>
+                <Link 
+                  to="/dashboard" 
+                  className="px-4 py-2 text-theSplit-light hover:bg-theSplit-teal/10 rounded-md"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <Button 
+                  variant="outline" 
+                  className="border-theSplit-teal text-theSplit-aqua hover:bg-theSplit-teal/10 mt-2"
+                  onClick={() => {
+                    signOut();
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link 
+                  to="/signin" 
+                  className="px-4 py-2 text-theSplit-light hover:bg-theSplit-teal/10 rounded-md"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign In
+                </Link>
+                <Link 
+                  to="/signup" 
+                  className="px-4 py-2 text-theSplit-light hover:bg-theSplit-teal/10 rounded-md"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       )}
