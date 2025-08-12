@@ -17,22 +17,46 @@ interface QuestionFormProps {
 
 interface Question {
   question_text: string;
-  correct_answer: string;
+  answer_options: string[];
   round_number: number;
 }
 
 const QuestionForm: React.FC<QuestionFormProps> = ({ gameId, totalRounds, onQuestionAdded }) => {
   const [questionText, setQuestionText] = useState('');
-  const [correctAnswer, setCorrectAnswer] = useState('');
+  const [answerOptions, setAnswerOptions] = useState(['', '']);
   const [roundNumber, setRoundNumber] = useState(1);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const addAnswerOption = () => {
+    if (answerOptions.length < 6) {
+      setAnswerOptions([...answerOptions, '']);
+    }
+  };
+
+  const removeAnswerOption = (index: number) => {
+    if (answerOptions.length > 2) {
+      setAnswerOptions(answerOptions.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateAnswerOption = (index: number, value: string) => {
+    const updated = [...answerOptions];
+    updated[index] = value;
+    setAnswerOptions(updated);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!questionText.trim()) {
       toast.error('Please enter a question');
+      return;
+    }
+
+    const validOptions = answerOptions.filter(option => option.trim() !== '');
+    if (validOptions.length < 2) {
+      toast.error('Please provide at least 2 answer options');
       return;
     }
 
@@ -44,7 +68,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ gameId, totalRounds, onQues
         .insert({
           game_id: gameId,
           question_text: questionText,
-          correct_answer: correctAnswer || null,
+          answer_options: validOptions,
           round_number: roundNumber
         });
         
@@ -52,7 +76,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ gameId, totalRounds, onQues
       
       toast.success('Question added successfully');
       setQuestionText('');
-      setCorrectAnswer('');
+      setAnswerOptions(['', '']);
       
       if (onQuestionAdded) {
         onQuestionAdded();
@@ -89,13 +113,16 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ gameId, totalRounds, onQues
       const isValid = questions.every(q => 
         typeof q.question_text === 'string' && 
         q.question_text.trim() !== '' &&
+        Array.isArray(q.answer_options) &&
+        q.answer_options.length >= 2 &&
+        q.answer_options.every(option => typeof option === 'string' && option.trim() !== '') &&
         typeof q.round_number === 'number' &&
         q.round_number > 0 &&
         q.round_number <= totalRounds
       );
       
       if (!isValid) {
-        toast.error('Invalid question format. Each question must have question_text and a valid round_number');
+        toast.error('Invalid question format. Each question must have question_text, at least 2 answer_options, and a valid round_number');
         return;
       }
       
@@ -105,7 +132,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ gameId, totalRounds, onQues
         .insert(questions.map(q => ({
           game_id: gameId,
           question_text: q.question_text,
-          correct_answer: q.correct_answer || null,
+          answer_options: q.answer_options,
           round_number: q.round_number
         })));
         
@@ -157,14 +184,39 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ gameId, totalRounds, onQues
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="correctAnswer">Correct Answer (Optional)</Label>
-          <Input
-            id="correctAnswer"
-            value={correctAnswer}
-            onChange={(e) => setCorrectAnswer(e.target.value)}
-            placeholder="Enter the correct answer"
-            className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white"
-          />
+          <Label>Answer Options</Label>
+          {answerOptions.map((option, index) => (
+            <div key={index} className="flex gap-2">
+              <Input
+                value={option}
+                onChange={(e) => updateAnswerOption(index, e.target.value)}
+                placeholder={`Option ${index + 1}`}
+                className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white flex-1"
+              />
+              {answerOptions.length > 2 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => removeAnswerOption(index)}
+                  className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+          ))}
+          {answerOptions.length < 6 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addAnswerOption}
+              className="border-theSplit-teal/50 text-theSplit-aqua hover:bg-theSplit-teal/10"
+            >
+              Add Option
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
@@ -198,7 +250,7 @@ const QuestionForm: React.FC<QuestionFormProps> = ({ gameId, totalRounds, onQues
         <div className="mt-2 text-sm text-theSplit-light/70">
           <p className="flex items-center gap-1">
             <FileText size={14} />
-            JSON format: [&#123;"question_text": "Question here", "correct_answer": "Answer here", "round_number": 1&#125;, ...]
+            JSON format: [&#123;"question_text": "Question here", "answer_options": ["Option 1", "Option 2"], "round_number": 1&#125;, ...]
           </p>
         </div>
       </form>

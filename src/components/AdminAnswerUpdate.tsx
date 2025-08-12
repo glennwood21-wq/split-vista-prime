@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/sonner';
 import {
   Card,
@@ -23,6 +24,7 @@ interface Question {
   question_text: string;
   round_number: number;
   correct_answer: string | null;
+  answer_options: string[] | null;
 }
 
 interface AdminAnswerUpdateProps {
@@ -51,7 +53,7 @@ const AdminAnswerUpdate: React.FC<AdminAnswerUpdateProps> = ({
     try {
       const { data, error } = await supabase
         .from('questions')
-        .select('id, question_text, round_number, correct_answer')
+        .select('id, question_text, round_number, correct_answer, answer_options')
         .eq('game_id', gameId)
         .order('round_number', { ascending: true });
 
@@ -61,7 +63,10 @@ const AdminAnswerUpdate: React.FC<AdminAnswerUpdateProps> = ({
       const initialAnswers: Record<number, string> = {};
       
       data.forEach(question => {
-        questionsByRound[question.round_number] = question;
+        questionsByRound[question.round_number] = {
+          ...question,
+          answer_options: question.answer_options as string[] | null
+        };
         initialAnswers[question.round_number] = question.correct_answer || '';
       });
       
@@ -87,14 +92,25 @@ const AdminAnswerUpdate: React.FC<AdminAnswerUpdateProps> = ({
         
       if (questionError) throw questionError;
       
-      // 2. Update all user answers for this question to set is_correct based on if they match
-      const { error: answersError } = await supabase
-        .rpc('update_user_answers_correctness', { 
-          question_id_param: questions[roundNumber].id,
-          correct_answer_param: correctAnswers[roundNumber]
-        });
+      // 2. Get all user answers for this question and update each one
+      const { data: userAnswers, error: fetchError } = await supabase
+        .from('user_answers')
+        .select('id, selected_answer')
+        .eq('question_id', questions[roundNumber].id);
         
-      if (answersError) throw answersError;
+      if (fetchError) throw fetchError;
+      
+      // Update each answer's correctness
+      for (const userAnswer of userAnswers || []) {
+        const { error: updateError } = await supabase
+          .from('user_answers')
+          .update({ 
+            is_correct: userAnswer.selected_answer === correctAnswers[roundNumber]
+          })
+          .eq('id', userAnswer.id);
+          
+        if (updateError) throw updateError;
+      }
       
       toast.success(`Correct answer for round ${roundNumber} updated successfully!`);
       
@@ -140,26 +156,38 @@ const AdminAnswerUpdate: React.FC<AdminAnswerUpdateProps> = ({
                     <p className="text-theSplit-white">{questions[round].question_text}</p>
                   </div>
                   
-                  <div className="space-y-2">
-                    <label htmlFor={`answer-${round}`} className="block text-sm font-medium text-theSplit-light">
-                      Correct Answer
+                  <div className="space-y-4">
+                    <label className="block text-sm font-medium text-theSplit-light">
+                      Select Correct Answer
                     </label>
-                    <div className="flex gap-4">
-                      <Input
-                        id={`answer-${round}`}
-                        value={correctAnswers[round] || ''}
-                        onChange={(e) => setCorrectAnswers(prev => ({ ...prev, [round]: e.target.value }))}
-                        className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white"
-                        placeholder="Enter the correct answer"
-                      />
-                      <Button
-                        onClick={() => updateCorrectAnswer(round)}
-                        disabled={loading[round]}
-                        className="bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy"
-                      >
-                        {loading[round] ? 'Updating...' : 'Update'}
-                      </Button>
-                    </div>
+                    <RadioGroup
+                      value={correctAnswers[round] || ''}
+                      onValueChange={(value) => setCorrectAnswers(prev => ({ ...prev, [round]: value }))}
+                      className="space-y-3"
+                    >
+                      {questions[round].answer_options?.map((option: string, index: number) => (
+                        <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-theSplit-navy/30 border border-theSplit-teal/20">
+                          <RadioGroupItem 
+                            value={option} 
+                            id={`round-${round}-option-${index}`}
+                            className="text-theSplit-teal"
+                          />
+                          <Label 
+                            htmlFor={`round-${round}-option-${index}`} 
+                            className="text-theSplit-white cursor-pointer flex-1"
+                          >
+                            {option}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                    <Button
+                      onClick={() => updateCorrectAnswer(round)}
+                      disabled={loading[round] || !correctAnswers[round]}
+                      className="w-full bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy"
+                    >
+                      {loading[round] ? 'Updating...' : 'Update Correct Answer'}
+                    </Button>
                   </div>
                 </div>
               ) : (

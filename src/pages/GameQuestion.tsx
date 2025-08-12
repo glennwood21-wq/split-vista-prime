@@ -5,10 +5,10 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/sonner';
-import { formatDistanceToNow } from 'date-fns';
 
 const GameQuestion: React.FC = () => {
   const { gameId } = useParams<{ gameId: string }>();
@@ -89,8 +89,8 @@ const GameQuestion: React.FC = () => {
   const handleSubmitAnswer = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user || !gameId || !question || !answer.trim()) {
-      toast.error('Please provide an answer');
+    if (!user || !gameId || !question || !answer) {
+      toast.error('Please select an answer');
       return;
     }
 
@@ -104,7 +104,7 @@ const GameQuestion: React.FC = () => {
           game_id: gameId,
           question_id: question.id,
           round_number: game.current_round,
-          selected_answer: answer.trim(),
+          selected_answer: answer,
           is_correct: null, // Will be evaluated later by admin/system
           eliminated: false
         });
@@ -188,18 +188,31 @@ const GameQuestion: React.FC = () => {
             <form onSubmit={handleSubmitAnswer}>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="answer" className="block text-sm text-theSplit-light/70 mb-2">
-                    Your Answer
+                  <label className="block text-sm text-theSplit-light/70 mb-4">
+                    Select your answer:
                   </label>
-                  <Input
-                    id="answer"
-                    type="text"
+                  <RadioGroup
                     value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
-                    placeholder="Enter your answer here"
+                    onValueChange={setAnswer}
                     disabled={hasAnswered}
-                    className="bg-theSplit-navy/50 border-theSplit-teal/30 text-theSplit-white placeholder:text-theSplit-light/40"
-                  />
+                    className="space-y-3"
+                  >
+                    {question.answer_options?.map((option: string, index: number) => (
+                      <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-theSplit-navy/30 border border-theSplit-teal/20 hover:border-theSplit-teal/40 transition-colors">
+                        <RadioGroupItem 
+                          value={option} 
+                          id={`option-${index}`}
+                          className="text-theSplit-teal"
+                        />
+                        <Label 
+                          htmlFor={`option-${index}`} 
+                          className="text-theSplit-white cursor-pointer flex-1"
+                        >
+                          {option}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
                 </div>
                 
                 {hasAnswered ? (
@@ -209,7 +222,7 @@ const GameQuestion: React.FC = () => {
                 ) : (
                   <Button 
                     type="submit"
-                    disabled={submitting || !answer.trim()}
+                    disabled={submitting || !answer}
                     className="w-full bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy"
                   >
                     {submitting ? 'Submitting...' : 'Submit Answer'}
