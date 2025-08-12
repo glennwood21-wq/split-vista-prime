@@ -44,10 +44,27 @@ const AdminAnswerUpdate: React.FC<AdminAnswerUpdateProps> = ({
   const [correctAnswers, setCorrectAnswers] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState<Record<number, boolean>>({});
   const [activeTab, setActiveTab] = useState<string>(currentRound.toString());
+  const [game, setGame] = useState<any>(null);
 
   useEffect(() => {
     fetchQuestions();
+    fetchGame();
   }, [gameId]);
+
+  const fetchGame = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('games')
+        .select('*')
+        .eq('id', gameId)
+        .single();
+
+      if (error) throw error;
+      setGame(data);
+    } catch (error: any) {
+      console.error('Error fetching game:', error.message);
+    }
+  };
 
   const fetchQuestions = async () => {
     try {
@@ -100,19 +117,34 @@ const AdminAnswerUpdate: React.FC<AdminAnswerUpdateProps> = ({
         
       if (fetchError) throw fetchError;
       
-      // Update each answer's correctness
+      // Update each answer's correctness and elimination status
       for (const userAnswer of userAnswers || []) {
+        const isCorrect = userAnswer.selected_answer === correctAnswers[roundNumber];
         const { error: updateError } = await supabase
           .from('user_answers')
           .update({ 
-            is_correct: userAnswer.selected_answer === correctAnswers[roundNumber]
+            is_correct: isCorrect,
+            eliminated: !isCorrect
           })
           .eq('id', userAnswer.id);
           
         if (updateError) throw updateError;
       }
       
-      toast.success(`Correct answer for round ${roundNumber} updated successfully!`);
+      // 3. Check if we should advance to the next round
+      if (roundNumber === game.current_round && roundNumber < game.total_rounds) {
+        const { error: gameUpdateError } = await supabase
+          .from('games')
+          .update({ current_round: roundNumber + 1 })
+          .eq('id', gameId);
+          
+        if (gameUpdateError) throw gameUpdateError;
+      }
+      
+      toast.success(`Round ${roundNumber} completed! ${roundNumber === game?.current_round && roundNumber < game?.total_rounds ? 'Game advanced to next round.' : 'Results updated.'}`);
+      
+      // Refresh game data
+      await fetchGame();
       
       if (onAnswerUpdated) {
         onAnswerUpdated();

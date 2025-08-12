@@ -21,6 +21,8 @@ const GameQuestion: React.FC = () => {
   const [question, setQuestion] = useState<any>(null);
   const [answer, setAnswer] = useState('');
   const [hasAnswered, setHasAnswered] = useState(false);
+  const [isEliminated, setIsEliminated] = useState(false);
+  const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -28,63 +30,113 @@ const GameQuestion: React.FC = () => {
       return;
     }
 
-    const fetchGameAndQuestion = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch game details
-        const { data: gameData, error: gameError } = await supabase
-          .from('games')
-          .select('*')
-          .eq('id', gameId)
-          .single();
-
-        if (gameError) throw gameError;
-        setGame(gameData);
-
-        // Fetch current round question
-        const { data: questionData, error: questionError } = await supabase
-          .from('questions')
-          .select('*')
-          .eq('game_id', gameId)
-          .eq('round_number', gameData.current_round)
-          .single();
-
-        if (questionError) {
-          if (questionError.code === 'PGRST116') {
-            toast.error(`No question found for round ${gameData.current_round}`);
-            return;
-          }
-          throw questionError;
-        }
-        setQuestion(questionData);
-
-        // Check if user has already answered this question
-        const { data: userAnswerData, error: userAnswerError } = await supabase
-          .from('user_answers')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('game_id', gameId)
-          .eq('question_id', questionData.id)
-          .single();
-
-        if (userAnswerError && userAnswerError.code !== 'PGRST116') throw userAnswerError;
-        
-        if (userAnswerData) {
-          setHasAnswered(true);
-          setAnswer(userAnswerData.selected_answer);
-        }
-
-      } catch (error: any) {
-        console.error('Error fetching data:', error.message);
-        toast.error('Failed to load game question');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchGameAndQuestion();
+    
+    // Set up real-time subscriptions
+    const gameChannel = supabase
+      .channel('game-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'games',
+          filter: `id=eq.${gameId}`
+        },
+        (payload) => {
+          console.log('Game updated:', payload);
+          setGame(payload.new);
+          // If the round changed, fetch new question
+          if (payload.new.current_round !== payload.old.current_round) {
+            fetchGameAndQuestion();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_answers',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('User answer updated:', payload);
+          if (payload.new.game_id === gameId) {
+            if (payload.new.eliminated) {
+              setIsEliminated(true);
+              setShowResults(true);
+            } else if (payload.new.is_correct !== null) {
+              setShowResults(true);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(gameChannel);
+    };
   }, [gameId, user, navigate]);
+
+  const fetchGameAndQuestion = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch game details
+      const { data: gameData, error: gameError } = await supabase
+        .from('games')
+        .select('*')
+        .eq('id', gameId)
+        .single();
+
+      if (gameError) throw gameError;
+      setGame(gameData);
+
+      // Fetch current round question
+      const { data: questionData, error: questionError } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('game_id', gameId)
+        .eq('round_number', gameData.current_round)
+        .single();
+
+      if (questionError) {
+        if (questionError.code === 'PGRST116') {
+          toast.error(`No question found for round ${gameData.current_round}`);
+          return;
+        }
+        throw questionError;
+      }
+      setQuestion(questionData);
+
+      // Check if user has already answered this question
+      const { data: userAnswerData, error: userAnswerError } = await supabase
+        .from('user_answers')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('game_id', gameId)
+        .eq('question_id', questionData.id)
+        .single();
+
+      if (userAnswerError && userAnswerError.code !== 'PGRST116') throw userAnswerError;
+      
+      if (userAnswerData) {
+        setHasAnswered(true);
+        setAnswer(userAnswerData.selected_answer);
+        setIsEliminated(userAnswerData.eliminated);
+        if (userAnswerData.is_correct !== null) {
+          setShowResults(true);
+        }
+      }
+
+    } catch (error: any) {
+      console.error('Error fetching data:', error.message);
+      toast.error('Failed to load game question');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmitAnswer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,51 +237,83 @@ const GameQuestion: React.FC = () => {
               <p className="text-lg">{question.question_text}</p>
             </div>
 
-            <form onSubmit={handleSubmitAnswer}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-theSplit-light/70 mb-4">
-                    Select your answer:
-                  </label>
-                  <RadioGroup
-                    value={answer}
-                    onValueChange={setAnswer}
-                    disabled={hasAnswered}
-                    className="space-y-3"
-                  >
-                    {question.answer_options?.map((option: string, index: number) => (
-                      <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-theSplit-navy/30 border border-theSplit-teal/20 hover:border-theSplit-teal/40 transition-colors">
-                        <RadioGroupItem 
-                          value={option} 
-                          id={`option-${index}`}
-                          className="text-theSplit-teal"
-                        />
-                        <Label 
-                          htmlFor={`option-${index}`} 
-                          className="text-theSplit-white cursor-pointer flex-1"
-                        >
-                          {option}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-                
-                {hasAnswered ? (
-                  <div className="bg-theSplit-teal/20 border border-theSplit-teal/30 rounded-lg p-4 text-center">
-                    <p className="text-theSplit-aqua">You've already submitted your answer!</p>
-                  </div>
-                ) : (
+            {isEliminated ? (
+              <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-6 text-center">
+                <h3 className="text-xl font-semibold text-red-400 mb-2">You've been eliminated!</h3>
+                <p className="text-theSplit-light/70 mb-4">
+                  Your answer was incorrect for Round {game.current_round - 1}. 
+                  Better luck next time!
+                </p>
+                <Button 
+                  onClick={() => navigate('/dashboard')} 
+                  className="bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy"
+                >
+                  Return to Dashboard
+                </Button>
+              </div>
+            ) : showResults && hasAnswered ? (
+              <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-6 text-center">
+                <h3 className="text-xl font-semibold text-green-400 mb-2">Correct! You advance!</h3>
+                <p className="text-theSplit-light/70 mb-4">
+                  You got the answer right and continue to the next round.
+                  {game.current_round < game.total_rounds ? ' The next question will appear shortly.' : ' Congratulations on completing the game!'}
+                </p>
+                {game.current_round >= game.total_rounds && (
                   <Button 
-                    type="submit"
-                    disabled={submitting || !answer}
-                    className="w-full bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy"
+                    onClick={() => navigate('/dashboard')} 
+                    className="bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy"
                   >
-                    {submitting ? 'Submitting...' : 'Submit Answer'}
+                    Return to Dashboard
                   </Button>
                 )}
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleSubmitAnswer}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-theSplit-light/70 mb-4">
+                      Select your answer:
+                    </label>
+                    <RadioGroup
+                      value={answer}
+                      onValueChange={setAnswer}
+                      disabled={hasAnswered}
+                      className="space-y-3"
+                    >
+                      {question.answer_options?.map((option: string, index: number) => (
+                        <div key={index} className="flex items-center space-x-3 p-3 rounded-lg bg-theSplit-navy/30 border border-theSplit-teal/20 hover:border-theSplit-teal/40 transition-colors">
+                          <RadioGroupItem 
+                            value={option} 
+                            id={`option-${index}`}
+                            className="text-theSplit-teal"
+                          />
+                          <Label 
+                            htmlFor={`option-${index}`} 
+                            className="text-theSplit-white cursor-pointer flex-1"
+                          >
+                            {option}
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  
+                  {hasAnswered ? (
+                    <div className="bg-theSplit-teal/20 border border-theSplit-teal/30 rounded-lg p-4 text-center">
+                      <p className="text-theSplit-aqua">You've submitted your answer! Waiting for results...</p>
+                    </div>
+                  ) : (
+                    <Button 
+                      type="submit"
+                      disabled={submitting || !answer}
+                      className="w-full bg-theSplit-teal hover:bg-theSplit-aqua text-theSplit-navy"
+                    >
+                      {submitting ? 'Submitting...' : 'Submit Answer'}
+                    </Button>
+                  )}
+                </div>
+              </form>
+            )}
           </CardContent>
           
           <CardFooter className="border-t border-theSplit-teal/20 pt-4 text-theSplit-light/60 text-xs">
